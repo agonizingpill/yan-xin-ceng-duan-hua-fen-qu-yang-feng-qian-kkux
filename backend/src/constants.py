@@ -1,3 +1,5 @@
 ROLES=('operator','supervisor','viewer')
 SAMPLE_STATES=('planned','sealed','broken','transferred','cancelled')
 INTERPRETATION_STATES=('queued','ready','failed','confirmed')
+BOX_STATES=('unverified','pending','resolved','confirmed')
+BOX_ORIENTATIONS=('normal','reversed')

@@ -40,6 +40,21 @@ class SampleInput(Clean):
     end_m:float=Field(gt=0)
     purpose:str=Field(min_length=2,max_length=200)
     destructive:bool=True
+    # 回执丢失重试须带同一幂等键，返回原切样单而不重复扣配额。
+    request_key:str|None=Field(default=None,min_length=8,max_length=80)
+class CoreBoxInput(Clean):
+    borehole_id:int
+    code:str=Field(min_length=2,max_length=40)
+    start_m:float=Field(ge=0)
+    end_m:float=Field(gt=0)
+class BoxRemeasureInput(Clean):
+    offset_m:float=Field(ge=0)
+    density:float=Field(ge=1,le=5)
+    susceptibility:float=Field(ge=0,le=1000)
+    velocity:float=Field(ge=500,le=9000)
+class BoxConfirmInput(Clean):
+    orientation:str|None=None
+    note:str=Field(default='',max_length=600)
 class SealInput(Clean):
     sample_id:int
     code:str=Field(min_length=4,max_length=60)

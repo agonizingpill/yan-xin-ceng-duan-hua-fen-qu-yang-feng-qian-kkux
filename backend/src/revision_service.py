@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from fastapi import HTTPException
-from .models import CoreRun,Reading,MissingInterval,Interpretation,Stratum,SampleInterval,Seal,Custody,ColumnRevision
+from .models import CoreRun,Reading,MissingInterval,Interpretation,Stratum,SampleInterval,Seal,Custody,ColumnRevision,CoreBox
 from .common import hole,get,pack,audit
 
 def create(s,p,u):
@@ -27,4 +27,5 @@ def freeze(s,id,u):
     samples=s.scalars(select(SampleInterval).where(SampleInterval.borehole_id==h.id,SampleInterval.state!='cancelled')).all()
     if any(v.state!='transferred'for v in samples):raise HTTPException(409,'尚有未完整封签交接样袋，不能冻结')
     ids=[v.id for v in samples];seals=s.scalars(select(Seal).where(Seal.sample_id.in_(ids))).all()if ids else[];sealids=[v.id for v in seals];cust=s.scalars(select(Custody).where(Custody.seal_id.in_(sealids))).all()if sealids else[]
-    x.snapshot={'borehole':pack(h),'runs':[pack(v)for v in runs],'readings':[pack(v)for v in points],'missing':[pack(v)for v in missing],'interpretation':pack(i),'strata':[pack(v)for v in s.scalars(select(Stratum).where(Stratum.interpretation_id==i.id))],'samples':[pack(v)for v in samples],'seals':[pack(v)for v in seals],'custodies':[pack(v)for v in cust]};x.state='frozen';x.frozen_by=u['email'];h.state='frozen';audit(s,u,'冻结柱状图 '+h.code+' '+x.version);return pack(x)
+    boxids=[v.box_id for v in samples if v.box_id];boxes=s.scalars(select(CoreBox).where(CoreBox.id.in_(boxids)).order_by(CoreBox.start_m)).all()if boxids else[]
+    x.snapshot={'borehole':pack(h),'runs':[pack(v)for v in runs],'readings':[pack(v)for v in points],'missing':[pack(v)for v in missing],'interpretation':pack(i),'strata':[pack(v)for v in s.scalars(select(Stratum).where(Stratum.interpretation_id==i.id))],'boxes':[pack(v)for v in boxes],'samples':[pack(v)for v in samples],'seals':[pack(v)for v in seals],'custodies':[pack(v)for v in cust]};x.state='frozen';x.frozen_by=u['email'];h.state='frozen';audit(s,u,'冻结柱状图 '+h.code+' '+x.version);return pack(x)
